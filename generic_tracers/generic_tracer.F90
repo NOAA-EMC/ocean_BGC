@@ -13,8 +13,7 @@
 ! Generic Tracers are designed to be used by both GFDL Ocean models, GOLD and MOM.
 ! This module provides the main interfaces for using generic tracers.
 ! Generic Tracers are contained in separate modules according to their
-! chemical/physical similarity (currently generic_TOPAZ, generic_COBALT, 
-! generic_ERGOM and generic_CFC)
+! chemical/physical similarity (currently generic_TOPAZ and generic_COBALT) 
 ! This module acts as a router for these various tracer modules and 
 ! routes the subroutine calls to the appropriate tracer module.
 ! It also maintains a (linked) list of all generic tracers created in 
@@ -48,32 +47,9 @@ module generic_tracer
   use g_tracer_utils, only : g_tracer_diag, g_tracer_print_info
   use g_tracer_utils, only : g_tracer_coupler_accumulate
 
-  use generic_abiotic, only : generic_abiotic_register, generic_abiotic_register_diag
-  use generic_abiotic, only : generic_abiotic_init, generic_abiotic_update_from_source
-  use generic_abiotic, only : generic_abiotic_set_boundary_values, generic_abiotic_end, do_generic_abiotic
-
   use generic_age,    only : generic_age_register
   use generic_age,    only : generic_age_init, generic_age_update_from_source,generic_age_update_from_coupler
   use generic_age,    only : generic_age_set_boundary_values, generic_age_end, do_generic_age
-
-  use generic_argon,    only : generic_argon_register
-  use generic_argon,    only : generic_argon_init, generic_argon_update_from_source,generic_argon_update_from_coupler
-  use generic_argon,    only : generic_argon_set_boundary_values, generic_argon_end, do_generic_argon
-
-  use generic_CFC,    only : generic_CFC_register
-  use generic_CFC,    only : generic_CFC_init, generic_CFC_update_from_source,generic_CFC_update_from_coupler
-  use generic_CFC,    only : generic_CFC_set_boundary_values, generic_CFC_end, do_generic_CFC
-  use generic_CFC,    only : generic_CFC_register_diag
-
-  use generic_SF6,    only : generic_SF6_register
-  use generic_SF6,    only : generic_SF6_init, generic_SF6_update_from_source,generic_SF6_update_from_coupler
-  use generic_SF6,    only : generic_SF6_set_boundary_values, generic_SF6_end, do_generic_SF6
-  use generic_SF6,    only : generic_SF6_register_diag
-
-  use generic_ERGOM, only : generic_ERGOM_register, generic_ERGOM_register_diag
-  use generic_ERGOM, only : generic_ERGOM_init, generic_ERGOM_update_from_source,generic_ERGOM_update_from_coupler
-  use generic_ERGOM, only : generic_ERGOM_set_boundary_values, generic_ERGOM_end, do_generic_ERGOM
-  use generic_ERGOM, only : generic_ERGOM_update_from_bottom
 
   use generic_TOPAZ,  only : generic_TOPAZ_register
   use generic_TOPAZ,  only : generic_TOPAZ_init, generic_TOPAZ_update_from_source,generic_TOPAZ_register_diag
@@ -129,8 +105,8 @@ module generic_tracer
   logical :: do_generic_tracer = .false.
   logical :: force_update_fluxes = .false.
 
-  namelist /generic_tracer_nml/ do_generic_tracer, do_generic_abiotic, do_generic_age, do_generic_argon, do_generic_CFC, &
-      do_generic_SF6, do_generic_TOPAZ,do_generic_ERGOM, do_generic_BLING, do_generic_miniBLING, do_generic_COBALT, &
+  namelist /generic_tracer_nml/ do_generic_tracer, do_generic_age,  &
+      do_generic_TOPAZ, do_generic_BLING, do_generic_miniBLING, do_generic_COBALT, &
       force_update_fluxes
 
 contains
@@ -160,26 +136,12 @@ ierr = check_nml_error(io_status,'generic_tracer_nml')
 
     call read_mocsy_namelist()
 
-    if(do_generic_abiotic) &
-         call generic_abiotic_register(tracer_list)
 
     if(do_generic_age) &
          call generic_age_register(tracer_list)
 
-    if(do_generic_argon) &
-         call generic_argon_register(tracer_list)
-
-    if(do_generic_CFC) &
-         call generic_CFC_register(tracer_list)
-
-    if(do_generic_SF6) &
-         call generic_SF6_register(tracer_list)
-
     if(do_generic_TOPAZ) &
          call generic_TOPAZ_register(tracer_list)
-
-    if(do_generic_ERGOM) &
-         call generic_ERGOM_register(tracer_list)
 
     if(do_generic_BLING) &
          call generic_BLING_register(tracer_list)
@@ -236,13 +198,12 @@ ierr = check_nml_error(io_status,'generic_tracer_nml')
 
     !Allocate and initialize all registered generic tracers
     !JGJ 2013/05/31  merged COBALT into siena_201303
-    if(do_generic_abiotic .or. do_generic_age .or. do_generic_argon .or. do_generic_CFC .or. do_generic_SF6 .or. do_generic_TOPAZ &
-       .or. do_generic_ERGOM .or. do_generic_BLING .or. do_generic_miniBLING .or. do_generic_COBALT) then
+    if(do_generic_age .or. do_generic_TOPAZ .or. do_generic_BLING .or. &
+       do_generic_miniBLING .or. do_generic_COBALT) then
        g_tracer => tracer_list        
        !Go through the list of tracers 
-       do  
+       do
           call g_tracer_init(g_tracer)
-
           !traverse the linked list till hit NULL
           call g_tracer_get_next(g_tracer, g_tracer_next)
           if(.NOT. associated(g_tracer_next)) exit
@@ -252,26 +213,12 @@ ierr = check_nml_error(io_status,'generic_tracer_nml')
     endif    
 
     !Initilalize specific tracers
-    if(do_generic_abiotic) &
-         call generic_abiotic_init(tracer_list, force_update_fluxes)
 
     if(do_generic_age) &
          call generic_age_init(tracer_list)
 
-    if(do_generic_argon) &
-         call generic_argon_init(tracer_list)
-
-    if(do_generic_CFC) &
-         call generic_CFC_init(tracer_list)
-
-    if(do_generic_SF6) &
-         call generic_SF6_init(tracer_list)
-
     if(do_generic_TOPAZ) &
          call generic_TOPAZ_init(tracer_list)
-
-    if(do_generic_ERGOM) &
-         call generic_ERGOM_init(tracer_list)
 
     if(do_generic_BLING) &
          call generic_BLING_init(tracer_list, force_update_fluxes)
@@ -291,8 +238,7 @@ ierr = check_nml_error(io_status,'generic_tracer_nml')
     !Diagnostics register for the fields common to All generic tracers
     !JGJ 2013/05/31  merged COBALT into siena_201303
 
-    if(do_generic_abiotic .or. do_generic_age .or. do_generic_argon .or. do_generic_CFC .or. do_generic_SF6 .or. do_generic_TOPAZ &
-       .or. do_generic_ERGOM .or. do_generic_BLING .or. do_generic_miniBLING .or. do_generic_COBALT) then
+    if(do_generic_age .or. do_generic_TOPAZ .or. do_generic_BLING .or. do_generic_miniBLING .or. do_generic_COBALT) then
 
        g_tracer => tracer_list        
        !Go through the list of tracers 
@@ -308,22 +254,14 @@ ierr = check_nml_error(io_status,'generic_tracer_nml')
     endif    
 
     !Diagnostics register for fields particular to each tracer module
-
-    if(do_generic_abiotic)  call generic_abiotic_register_diag(diag_list)
     
     if(do_generic_TOPAZ)  call generic_TOPAZ_register_diag(diag_list)    
-
-    if(do_generic_ERGOM)  call generic_ERGOM_register_diag(diag_list)    
 
     if(do_generic_BLING)  call generic_BLING_register_diag(diag_list)    
     
     if(do_generic_miniBLING)  call generic_miniBLING_register_diag()    
 
     if(do_generic_COBALT)  call generic_COBALT_register_diag(diag_list)
-
-    if(do_generic_SF6) call generic_SF6_register_diag(diag_list)
-    
-    if(do_generic_CFC) call generic_CFC_register_diag(diag_list)
 
   end subroutine generic_tracer_register_diag
 
@@ -351,16 +289,10 @@ ierr = check_nml_error(io_status,'generic_tracer_nml')
 
     !All generic tracers
     !Update tracer boundary values (%stf and %triver) from coupler fluxes foreach tracer in the prog_tracer_list
-    call g_tracer_coupler_get(tracer_list,IOB_struc)
+    !call g_tracer_coupler_get(tracer_list,IOB_struc) 
 
     !Specific tracers
     !    if(do_generic_age)    call generic_age_update_from_coupler(tracer_list) !Nothing to do for age
-
-    !    if(do_generic_argon)    call generic_argon_update_from_coupler(tracer_list) !Nothing to do for argon
-
-    !    if(do_generic_CFC)    call generic_CFC_update_from_coupler(tracer_list) !Nothing to do for CFC
-
-    !    if(do_generic_SF6)    call generic_SF6_update_from_coupler(tracer_list) !Nothing to do for SF6
 
     if(do_generic_TOPAZ)  call generic_TOPAZ_update_from_coupler(tracer_list)
 
@@ -379,7 +311,7 @@ ierr = check_nml_error(io_status,'generic_tracer_nml')
 
     !All generic tracers
     !Running average tracer boundary values (%stf and %triver) from coupler fluxes foreach tracer in the prog_tracer_list
-    if(do_generic_tracer) call g_tracer_coupler_accumulate(tracer_list,IOB_struc,weight, model_time)
+    !if(do_generic_tracer) call g_tracer_coupler_accumulate(tracer_list,IOB_struc,weight, model_time)
 
   end subroutine generic_tracer_coupler_accumulate
 
@@ -500,18 +432,9 @@ ierr = check_nml_error(io_status,'generic_tracer_nml')
 
     if(do_generic_age)  call generic_age_update_from_source(tracer_list,tau,dtts)
 
-    !    if(do_generic_argon)    call generic_argon_update_from_source(tracer_list) !Nothing to do for argon
-
-    if(do_generic_abiotic) call generic_abiotic_update_from_source(tracer_list,Temp,Salt,sosga,rho_dzt,dzt,&
-         hblt_depth,ilb,jlb,tau,dtts,grid_dat,model_time)
-
     if(do_generic_TOPAZ)  call generic_TOPAZ_update_from_source(tracer_list,Temp,Salt,rho_dzt,dzt,&
          hblt_depth,ilb,jlb,tau,dtts,grid_dat,model_time,&
          nbands,max_wavelength_band,sw_pen_band,opacity_band)
-
-    if(do_generic_ERGOM)  call generic_ERGOM_update_from_source(tracer_list,Temp,Salt,rho_dzt,dzt,&
-         hblt_depth,ilb,jlb,tau,dtts,grid_dat,model_time,&
-         nbands,max_wavelength_band,sw_pen_band,opacity_band,current_wave_stress)
 
     if(do_generic_BLING)  call generic_BLING_update_from_source(tracer_list,Temp,Salt,rho_dzt,dzt,&
          hblt_depth,ilb,jlb,tau,dtts,grid_dat,model_time,&
@@ -524,12 +447,6 @@ ierr = check_nml_error(io_status,'generic_tracer_nml')
     if(do_generic_COBALT)  call generic_COBALT_update_from_source(tracer_list,Temp,Salt,rho_dzt,dzt,&
          hblt_depth,ilb,jlb,tau,dtts,grid_dat,model_time,&
          nbands,max_wavelength_band,sw_pen_band,opacity_band,internal_heat,frunoff)
-
-    if(do_generic_SF6)  call generic_SF6_update_from_source(tracer_list,rho_dzt,dzt,hblt_depth,&
-         ilb,jlb,tau,dtts,grid_dat,model_time)
-
-    if(do_generic_CFC)  call generic_CFC_update_from_source(tracer_list,rho_dzt,dzt,hblt_depth,&
-         ilb,jlb,tau,dtts,grid_dat,model_time)
 
     return
 
@@ -562,15 +479,7 @@ ierr = check_nml_error(io_status,'generic_tracer_nml')
 
     !    if(do_generic_age)    call generic_age_update_from_bottom(tracer_list)!Nothing to do for age 
 
-    !    if(do_generic_argon)    call generic_argon_update_from_bottom(tracer_list)!Nothing to do for argon 
-
-    !    if(do_generic_CFC)    call generic_CFC_update_from_bottom(tracer_list)!Nothing to do for CFC 
-
-    !    if(do_generic_SF6)    call generic_SF6_update_from_bottom(tracer_list)!Nothing to do for SF6 
-
     if(do_generic_TOPAZ)  call generic_TOPAZ_update_from_bottom(tracer_list,dt, tau, model_time)
-
-    if(do_generic_ERGOM)  call generic_ERGOM_update_from_bottom(tracer_list,dt, tau, model_time)
    
     if(do_generic_BLING)  call generic_BLING_update_from_bottom(tracer_list,dt, tau)
 
@@ -607,8 +516,8 @@ ierr = check_nml_error(io_status,'generic_tracer_nml')
 
     !nnz: Should I loop here or inside the sub g_tracer_vertdiff ?    
     !JGJ 2013/05/31  merged COBALT into siena_201303
-    if(do_generic_abiotic .or. do_generic_age .or. do_generic_argon .or. do_generic_CFC .or. do_generic_SF6 .or. do_generic_TOPAZ &
-       .or. do_generic_ERGOM .or. do_generic_BLING .or. do_generic_miniBLING .or. do_generic_COBALT) then
+    if(do_generic_age .or. do_generic_TOPAZ .or. do_generic_BLING &
+       .or. do_generic_miniBLING .or. do_generic_COBALT) then
 
        g_tracer => tracer_list        
        !Go through the list of tracers 
@@ -648,8 +557,8 @@ ierr = check_nml_error(io_status,'generic_tracer_nml')
 
     !nnz: Should I loop here or inside the sub g_tracer_vertdiff ?    
     !JGJ 2013/05/31  merged COBALT into siena_201303
-    if(do_generic_age .or. do_generic_argon .or. do_generic_CFC .or. do_generic_TOPAZ .or. do_generic_ERGOM &
-       .or. do_generic_BLING .or. do_generic_miniBLING .or. do_generic_COBALT) then
+    if(do_generic_age .or. do_generic_TOPAZ .or. do_generic_BLING &
+       .or. do_generic_miniBLING .or. do_generic_COBALT) then
 
        g_tracer => tracer_list        
        !Go through the list of tracers 
@@ -710,31 +619,17 @@ ierr = check_nml_error(io_status,'generic_tracer_nml')
 
     character(len=fm_string_len), parameter :: sub_name = 'generic_tracer_coupler_set'
 
+    call mpp_error(NOTE,'========== generic_tracer_coupler_set is being called!==========')
+
     !Set coupler fluxes from tracer boundary values (%stf and %triver)for each tracer in the prog_tracer_list
     !User must identify these tracers (not all tracers in module need to set coupler)
     !User must provide the calculations for these boundary values.
 
-    if(do_generic_abiotic) &
-         call generic_abiotic_set_boundary_values(tracer_list,ST,SS,sosga,rho,ilb,jlb,tau, &
-                                                  model_time,dzt)
-
     if(do_generic_age) &
          call generic_age_set_boundary_values(tracer_list,ST,SS,rho,ilb,jlb,tau)
 
-    if(do_generic_argon) &
-         call generic_argon_set_boundary_values(tracer_list,ST,SS,rho,ilb,jlb,tau)
-
-    if(do_generic_CFC) &
-         call generic_CFC_set_boundary_values(tracer_list,ST,SS,rho,ilb,jlb,tau)
-
-    if(do_generic_SF6) &
-         call generic_SF6_set_boundary_values(tracer_list,ST,SS,rho,ilb,jlb,tau)
-
     if(do_generic_TOPAZ) &
          call generic_TOPAZ_set_boundary_values(tracer_list,ST,SS,rho,ilb,jlb,tau)
-
-    if(do_generic_ERGOM) &
-         call generic_ERGOM_set_boundary_values(tracer_list,ST,SS,rho,ilb,jlb,tau)
 
     if(do_generic_BLING) &
          call generic_BLING_set_boundary_values(tracer_list,ST,SS,rho,ilb,jlb,tau,dzt)
@@ -743,16 +638,17 @@ ierr = check_nml_error(io_status,'generic_tracer_nml')
          call generic_miniBLING_set_boundary_values(tracer_list,ST,SS,rho,ilb,jlb,tau)
 
     if(do_generic_COBALT) &
-         call generic_COBALT_set_boundary_values(tracer_list,ST,SS,rho,ilb,jlb,tau,dzt,model_time)
+         call generic_COBALT_set_boundary_values(tracer_list,ST,SS,rho,ilb,jlb,tau,dzt)
 
     !
     !Set coupler fluxes from tracer boundary values (%alpha and %csurf)
     !for each tracer in the tracer_list that has been marked by the user routine above
     !JGJ 2013/05/31  merged COBALT into siena_201303
     !
-    if(do_generic_abiotic .or. do_generic_age .or. do_generic_argon .or. do_generic_CFC .or. do_generic_SF6 .or. do_generic_TOPAZ &
-      .or. do_generic_ERGOM .or. do_generic_BLING .or. do_generic_miniBLING .or. do_generic_COBALT) &
-       call g_tracer_coupler_set(tracer_list,IOB_struc)
+    !if(do_generic_age .or. do_generic_TOPAZ .or. do_generic_BLING &
+    !   .or. do_generic_miniBLING .or. do_generic_COBALT) &
+
+      !call g_tracer_coupler_set(tracer_list,IOB_struc)
 
   end subroutine generic_tracer_coupler_set
 
@@ -773,7 +669,7 @@ ierr = check_nml_error(io_status,'generic_tracer_nml')
   subroutine generic_tracer_coupler_zero(IOB_struc)
     type(coupler_2d_bc_type), intent(inout) :: IOB_struc
     !Generic tracer coupler values are not accumulative. No need to set them to zero
-!    call g_tracer_coupler_set(tracer_list,IOB_struc,value=0.0)
+    !  call g_tracer_coupler_set(tracer_list,IOB_struc,value=0.0)
   end subroutine generic_tracer_coupler_zero
 
   ! <SUBROUTINE NAME="generic_tracer_end">
@@ -786,13 +682,8 @@ ierr = check_nml_error(io_status,'generic_tracer_nml')
   ! </SUBROUTINE>
   subroutine generic_tracer_end
     character(len=fm_string_len), parameter :: sub_name = 'generic_tracer_end'
-    if(do_generic_abiotic) call generic_abiotic_end
     if(do_generic_age) call generic_age_end
-    if(do_generic_argon) call generic_argon_end
-    if(do_generic_CFC) call generic_CFC_end
-    if(do_generic_SF6) call generic_SF6_end
     if(do_generic_TOPAZ)  call generic_TOPAZ_end
-    if(do_generic_ERGOM)  call generic_ERGOM_end
     if(do_generic_BLING)  call generic_BLING_end
     if(do_generic_miniBLING)  call generic_miniBLING_end
     if(do_generic_COBALT)  call generic_COBALT_end

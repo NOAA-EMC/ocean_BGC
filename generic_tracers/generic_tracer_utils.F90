@@ -751,6 +751,7 @@ contains
        flux_param, flux_bottom, btm_reservoir, move_vertical, diff_vertical, sink_rate, flux_gas_restart_file, &
        flux_gas_type,requires_src_info,standard_name,diag_name,diag_field_units,diag_field_scaling_factor,implementation) 
 
+
     type(g_tracer_type), pointer :: node_ptr 
     character(len=*),   intent(in) :: package,name,longname,units
     logical,            intent(in) :: prog
@@ -804,6 +805,9 @@ contains
     g_tracer%package_name = trim(package)
     g_tracer%units        = trim(units)
     g_tracer%prog         = prog 
+
+
+    call mpp_error(NOTE, trim(g_tracer%name)//': g_tracer_add!')
 
     if (present(standard_name)) then
       g_tracer%standard_name = trim(standard_name)
@@ -970,6 +974,8 @@ contains
     type(g_tracer_type), pointer :: g_tracer
     integer :: isc,iec,jsc,jec,isd,ied,jsd,jed, nk,ntau,axes(3)
 
+    call mpp_error(NOTE,trim(g_tracer%name)//': g_tracer_init!')
+
     !Get the common values for all tracers
     call g_tracer_get_common(isc,iec,jsc,jec,isd,ied,jsd,jed,nk,ntau,axes) 
 
@@ -1104,6 +1110,8 @@ contains
     type(g_tracer_type), pointer :: g_tracer
 
     character(len=fm_string_len) :: string
+
+    call mpp_error(NOTE,trim(g_tracer%name)//': g_tracer_register_diag!')
 
     if (g_tracer%standard_name .EQ. "") then
       g_tracer%diag_id_field = g_register_diag_field(g_tracer%package_name, &
@@ -1317,7 +1325,7 @@ contains
 
     g_tracer => g_tracer_list
     !Go through the list of tracers 
-    do  
+    do
        !
        !Set coupler values only for tracers that have _ALLOCATED %alpha, %csurf and %sc_no
        !
@@ -1418,6 +1426,7 @@ contains
        stf_array=0.0
 
        if(g_tracer%flux_gas) then
+
           temp_array=0.0
           call extract_coupler_values(BC_struc  =IOB_struc, &
                BC_index  =g_tracer%flux_gas_ind,    & 

@@ -1,4 +1,4 @@
-! This code comes from GOLD/config_src/coupled_driver here to be shared.
+! This code comes from GOLD/config_src/coupled_driver here to be shared..
 ! But, the interfaces need a little change to work properly with generic tracers.
 ! The lower bounds of arrays should be specified in the arguments otherwise it core with "out of bound" message.
 ! For this reason I names the module FMS_coupler_util to distinguish it from GOLD coupler_util
@@ -7,7 +7,7 @@ module FMS_coupler_util
 
 !   This code provides a couple of interfaces to allow more transparent and
 ! robust extraction of the various fields in the coupler types.
-use mpp_mod,           only : mpp_error, FATAL, WARNING
+use mpp_mod,           only : mpp_error, FATAL, WARNING, NOTE
 use coupler_types_mod, only : coupler_2d_bc_type, ind_flux, ind_deltap, ind_kw
 use coupler_types_mod, only : ind_alpha, ind_csurf, ind_sc_no
 
@@ -110,7 +110,7 @@ subroutine set_coupler_values(array_in, BC_struc, BC_index, BC_element, ilb, jlb
   if ((BC_element /= ind_flux) .and. (BC_element /= ind_alpha) .and. &
       (BC_element /= ind_csurf) .and. (BC_element /= ind_sc_no) .and. &
       (BC_element /= ind_deltap) .and. (BC_element /= ind_kw)) then
-    call mpp_error(FATAL,"extract_coupler_values: Unrecognized BC_element.")
+    call mpp_error(FATAL,"set_coupler_values: Unrecognized BC_element.")
   endif
 
   ! These error messages should be made more explicit.
@@ -120,7 +120,7 @@ subroutine set_coupler_values(array_in, BC_struc, BC_index, BC_element, ilb, jlb
        "The requested boundary condition is not associated.")
 !  if (.not.associated(BC_struc%bc(BC_index)%field(BC_element))) &
   if (.not.associated(BC_struc%bc(BC_index)%field)) &
-    call mpp_error(FATAL,"set_coupler_values: " // &
+    call mpp_error(FATAL,"set_coupler_values: " //  &
        "The requested boundary condition element is not associated.")
   if (.not.associated(BC_struc%bc(BC_index)%field(BC_element)%values)) &
     call mpp_error(FATAL,"set_coupler_values: " // &

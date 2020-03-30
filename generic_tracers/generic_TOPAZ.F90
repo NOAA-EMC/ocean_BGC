@@ -3211,7 +3211,7 @@ contains
   subroutine generic_TOPAZ_update_from_coupler(tracer_list)
     type(g_tracer_type), pointer :: tracer_list
 
-    character(len=fm_string_len), parameter :: sub_name = 'generic_CFC_update_from_coupler'
+    character(len=fm_string_len), parameter :: sub_name = 'generic_TOPAZ_update_from_coupler'
 
     real, dimension(:,:)  ,pointer    :: stf_alk,dry_no3,wet_no3
 
