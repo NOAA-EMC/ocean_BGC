@@ -619,8 +619,6 @@ ierr = check_nml_error(io_status,'generic_tracer_nml')
 
     character(len=fm_string_len), parameter :: sub_name = 'generic_tracer_coupler_set'
 
-    call mpp_error(NOTE,'========== generic_tracer_coupler_set is being called!==========')
-
     !Set coupler fluxes from tracer boundary values (%stf and %triver)for each tracer in the prog_tracer_list
     !User must identify these tracers (not all tracers in module need to set coupler)
     !User must provide the calculations for these boundary values.

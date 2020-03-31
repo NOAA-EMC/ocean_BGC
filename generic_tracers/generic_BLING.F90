@@ -4512,6 +4512,8 @@ write (stdlogunit, generic_bling_nml)
     call g_tracer_set_values(tracer_list,'dic','csurf',co2_csurf,isd,jsd)
     call g_tracer_set_values(tracer_list,'dic','sc_no',co2_sc_no,isd,jsd)
 
+    deallocate(co2_alpha,co2_csurf,co2_sc_no)
+
     endif                                                     !CARBON CYCLE>>
 
 
@@ -4587,9 +4589,7 @@ write (stdlogunit, generic_bling_nml)
     call g_tracer_set_values(tracer_list,'o2', 'csurf',o2_csurf, isd,jsd)
     call g_tracer_set_values(tracer_list,'o2', 'sc_no',o2_sc_no, isd,jsd)
 
-    deallocate(co2_alpha,co2_csurf,&
-      co2_sc_no,o2_alpha,          &
-      o2_csurf,o2_sc_no)
+    deallocate(o2_alpha,o2_csurf,o2_sc_no)
 
   end subroutine generic_BLING_set_boundary_values
 
