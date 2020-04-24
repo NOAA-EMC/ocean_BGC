@@ -537,7 +537,7 @@ contains
 
     list_path = '/ocean_mod/namelists/' // trim(package_name) // '/'
 
-    list_index = fm_new_list(list_path)
+    list_index = fm_new_list(list_path, create = .true.)
     if (list_index .le. 0) then  !{
        call mpp_error(FATAL, trim(sub_name) // ' Could not make  the new list' // list_path)
     endif  !}
@@ -924,13 +924,13 @@ contains
 
     call  g_tracer_add_param(trim(g_tracer%name)//"_requires_src_info",g_tracer%requires_src_info , .false.)
 
-    if(present(requires_src_info)) then
-       g_tracer%requires_src_info = requires_src_info 
-    elseif(trim(g_tracer%package_name) .eq. 'generic_cobalt' .or. &
-           trim(g_tracer%package_name) .eq. 'generic_abiotic' .or. &
-           trim(g_tracer%package_name) .eq. 'generic_bling') then !Niki: later we can make this just else
-       call  g_tracer_add_param('enforce_src_info', g_tracer%requires_src_info ,  .true.) 
-    endif
+    !if(present(requires_src_info)) then
+    !   g_tracer%requires_src_info = requires_src_info 
+    !elseif(trim(g_tracer%package_name) .eq. 'generic_cobalt' .or. &
+    !       trim(g_tracer%package_name) .eq. 'generic_abiotic' .or. &
+    !       trim(g_tracer%package_name) .eq. 'generic_bling') then !Niki: later we can make this just else
+    !   call  g_tracer_add_param('enforce_src_info', g_tracer%requires_src_info ,  .true.) 
+    !endif
        
     call  g_tracer_add_param(trim(g_tracer%name)//"_src_file",         g_tracer%src_file ,        'NULL') 
     call  g_tracer_add_param(trim(g_tracer%name)//"_src_var_name",     g_tracer%src_var_name ,    'NULL') 
@@ -939,7 +939,7 @@ contains
     call  g_tracer_add_param(trim(g_tracer%name)//"_src_var_gridspec", g_tracer%src_var_gridspec ,'NULL') 
     call  g_tracer_add_param(trim(g_tracer%name)//"_valid_min",        g_tracer%src_var_valid_min , -99.0) 
     call  g_tracer_add_param(trim(g_tracer%name)//"_valid_max",        g_tracer%src_var_valid_max , +1.0e64) 
-    call  g_tracer_add_param(trim(g_tracer%name)//"_requires_restart", g_tracer%requires_restart , .true.) 
+    call  g_tracer_add_param(trim(g_tracer%name)//"_requires_restart", g_tracer%requires_restart , .false.) 
     
     !===================================================================
     !Reversed Linked List implementation! Make this new node to be the head of the list.
@@ -3607,7 +3607,7 @@ contains
        endif
 
        !Check that the required source information is set 
-       if(g_tracer%requires_src_info) then 
+       if(g_tracer%requires_src_info) then
           if(g_tracer%src_file .eq. 'NULL') then
               write(errorstring, '(a)') trim(g_tracer%name)//' : src_file is not set in the field_table'
               call mpp_error(FATAL, trim(sub_name) //': '//  trim(errorstring)) 
